@@ -229,7 +229,6 @@ function getInventoryCategory(itemCategory, description, unit, categories) {
 function getAngelBarItemIcon(description) {
     const desc = String(description || '').toLocaleLowerCase();
     if (desc.includes('mango')) return '🥭';
-    if (desc.includes('assorted') || desc.includes('asstd')) return '✨';
     return '🍫';
 }
 
