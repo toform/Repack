@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#fdfcf7">
+    <title>Angel Bars | Repacking Checklist</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Library para mabasa ang Excel file -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/cards.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/layout.css?v=999">
+</head>
+<body>
+
+    <!-- SIDEBAR OVERLAY & PANEL (Slide Bar) -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+    <aside id="sidebarPanel" class="sidebar-panel">
+        <nav class="sidebar-tabs" aria-label="Sidebar features">
+            <button type="button" class="sidebar-tab-btn active" data-sidebar-tab="inventory" aria-selected="true">📦 Total Inventory Needed</button>
+        </nav>
+        <div class="sidebar-content">
+            <section id="inventorySidebarTab" class="sidebar-tab-panel" data-sidebar-panel="inventory">
+                <h2>📦 Total Inventory Needed</h2>
+                <div id="itemTotalsList" class="inventory-category-list">
+                    <p class="summary-empty">Upload Excel file to calculate inventory totals.</p>
+                </div>
+            </section>
+        </div>
+        <button id="closeSidebarBtn" class="btn btn-secondary">Close Sidebar</button>
+        <button id="clearAllDataBtn" type="button" class="clear-data-btn">🧹 Clear Active Data & Upload New</button>
+    </aside>
+
+    <!-- TOP HEADER -->
+    <header class="app-header">
+        <div class="logo-title">
+            <span id="openSidebarBtn" class="menu-icon">☰</span>
+            <h1>Repacking Checklist</h1>
+            <button type="button" id="homeNavBtn" class="home-nav-btn" aria-label="Open Home Dashboard">🏠 Home</button>
+        </div>
+        <div class="upload-section">
+            <label for="excelFileInput" class="upload-btn">
+                <span>📁 Upload Excel</span>
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" />
+            </label>
+            <button type="button" id="resetBatchBtn" class="reset-batch-btn">🔴 Reset Batch</button>
+            <button type="button" id="archiveBatchBtn" class="archive-batch-btn">📦 Archive Current Batch</button>
+            <button type="button" id="headerAddCustomerBtn" class="btn-header-add-customer">👤 Add a Customer</button>
+        </div>
+    </header>
+
+    <section id="homeDashboardView" class="app-view dashboard-view">
+        <div class="dashboard-hero">
+            <h2>Welcome to Angel Bars Checklist</h2>
+            <p>Select a mode below to manage your 15-day repacking cycle:</p>
+        </div>
+        <div class="dashboard-cards-grid">
+            <button type="button" class="dashboard-card" id="navToRepackingCard">
+                <span class="dashboard-card-icon" aria-hidden="true">📦</span>
+                <span class="dashboard-card-info">
+                    <span class="dashboard-card-title">Repacking Mode</span>
+                    <span class="dashboard-card-description">Track packing progress, check off items, and print slips for active orders.</span>
+                </span>
+                <span class="dashboard-card-footer">
+                    <span class="dashboard-badge" id="dashPendingBadge">0 Pending Orders</span>
+                    <span class="dashboard-card-arrow" aria-hidden="true">➔</span>
+                </span>
+            </button>
+            <button type="button" class="dashboard-card" id="navToOrderEntryCard">
+                <span class="dashboard-card-icon" aria-hidden="true">📝</span>
+                <span class="dashboard-card-info">
+                    <span class="dashboard-card-title">Add New Batch of Order</span>
+                    <span class="dashboard-card-description">Create repeat orders, adjust quantities (+ / -), and export styled Excel files.</span>
+                </span>
+                <span class="dashboard-card-footer">
+                    <span class="dashboard-badge" id="dashProductBadge">13 Catalog Products</span>
+                    <span class="dashboard-card-arrow" aria-hidden="true">➔</span>
+                </span>
+            </button>
+            <button type="button" class="dashboard-card" id="navToArchivesCard">
+                <span class="dashboard-card-icon" aria-hidden="true">📁</span>
+                <span class="dashboard-card-info">
+                    <span class="dashboard-card-title">Archives of Batches</span>
+                    <span class="dashboard-card-description">Access past 15-day cycle records, view summaries, or restore orders.</span>
+                </span>
+                <span class="dashboard-card-footer">
+                    <span class="dashboard-badge" id="dashArchiveBadge">0 Saved Batches</span>
+                    <span class="dashboard-card-arrow" aria-hidden="true">➔</span>
+                </span>
+            </button>
+        </div>
+    </section>
+
+    <section id="repackingView" class="app-view hidden">
+    <aside id="archivedBatchEditBanner" class="editing-archive-banner" hidden aria-live="polite">
+        <div class="banner-info">
+            <span class="banner-icon" aria-hidden="true">✏️</span>
+            <span>Editing Archived Batch: <strong id="archivedBatchEditName"></strong> — Changes will update active list</span>
+        </div>
+        <div class="banner-actions">
+            <button type="button" id="saveArchiveChangesBtn" class="btn-banner-save">💾 Save Changes</button>
+            <button type="button" id="putActiveBatchBtn" class="btn-banner-active">📌 Put as an Active Batch List</button>
+        </div>
+    </aside>
+    <!-- STATUS TABS (Pending, Incomplete, Completed) -->
+    <nav class="status-tabs">
+        <button class="tab-btn active" data-tab="pending">
+            PENDING <span class="badge" id="count-pending">0</span>
+        </button>
+        <button class="tab-btn" data-tab="incomplete">
+            INCOMPLETE <span class="badge" id="count-incomplete">0</span>
+        </button>
+        <button class="tab-btn" data-tab="completed">
+            COMPLETED <span class="badge" id="count-completed">0</span>
+        </button>
+    </nav>
+
+    <!-- MAIN CARDS GRID -->
+    <main class="content-container">
+        <section class="order-controls" aria-label="Search and filter customer orders">
+            <label class="search-control" for="customerSearch">
+                <span aria-hidden="true">⌕</span>
+                <input type="search" id="customerSearch" placeholder="Search customers or items..." autocomplete="off">
+            </label>
+            <label class="filter-control" for="areaFilter">
+                <span>Area</span>
+                <select id="areaFilter">
+                    <option value="">All areas</option>
+                </select>
+            </label>
+            <label class="filter-control sort-control" for="orderSort">
+                <span>Sort by</span>
+                <select id="orderSort">
+                    <option value="oatmilk-desc" selected>Oat Milk (High to Low)</option>
+                    <option value="name">Customer name (A–Z)</option>
+                    <option value="progress">Packing progress (lowest first)</option>
+                    <option value="area">Area code</option>
+                </select>
+            </label>
+        </section>
+        <div id="cardsGrid" class="cards-grid" aria-live="polite">
+            <!-- Customer cards and file-loading errors are rendered here. -->
+        </div>
+    </main>
+    </section>
+
+    <section id="orderEntryView" class="app-view kiosk-entry-view hidden">
+        <div class="kiosk-entry-header">
+            <div>
+                <h2>📝 Add New Batch of Order</h2>
+                <p>Select customers on the left tray, then tap products on the catalog to adjust quantities.</p>
+            </div>
+            <button type="button" class="workflow-back-btn" data-home-back>← Back to Home</button>
+        </div>
+
+        <form id="repeatOrderForm" class="kiosk-workspace">
+            <aside class="kiosk-sidebar-tray">
+                <section class="tray-card customer-picker-card">
+                    <div class="tray-card-header">
+                        <h3>👥 Select Customer(s)</h3>
+                        <div class="tray-quick-actions">
+                            <button type="button" id="kioskSelectAllBtn" class="btn-chip">Select All</button>
+                            <button type="button" id="kioskDeselectAllBtn" class="btn-chip">Clear</button>
+                        </div>
+                    </div>
+                    <div class="kiosk-mode-switch" role="group" aria-label="Customer selection mode">
+                        <button type="button" class="kiosk-mode-btn active" data-order-mode="single" aria-pressed="true">Single Customer Edit</button>
+                        <button type="button" class="kiosk-mode-btn" data-order-mode="batch" aria-pressed="false">Shared Bulk Order</button>
+                        <button type="button" class="kiosk-mode-btn" data-order-mode="individual" aria-pressed="false">📋 All Individual Orders</button>
+                    </div>
+                    <label class="kiosk-search-box" for="repeatOrderCustomerSearch">
+                        <span aria-hidden="true">🔍</span>
+                        <input type="search" id="repeatOrderCustomerSearch" autocomplete="off" placeholder="Search customer or area..." aria-label="Search customer or area">
+                    </label>
+                    <nav class="kiosk-area-filters" id="kioskAreaFilters" aria-label="Filter customers by area"></nav>
+                    <div class="kiosk-customer-list" id="repeatOrderCustomerGroups" aria-label="Customer list"></div>
+                    <button id="reloadPreviousOrderBtn" class="order-entry-reload-btn" type="button" disabled>↺ Reload Previous Order</button>
+                    <p id="repeatOrderStatus" class="repeat-order-status" role="status" aria-live="polite"></p>
+                </section>
+
+                <section class="tray-card cart-summary-card">
+                    <div class="cart-summary-header">
+                        <h3>🛒 Active Order Summary</h3>
+                        <span id="repeatOrderSelectionSummary" class="badge-gold">0 Selected</span>
+                    </div>
+                    <p id="repeatOrderBatchMessage" class="repeat-order-batch-message">Select a customer to load their previous order.</p>
+                    <div class="cart-items-preview" id="repeatOrderKioskPreview" aria-live="polite">
+                        <p class="empty-cart-msg">Select a customer from above to start adding items.</p>
+                    </div>
+                    <div class="cart-totals-box">
+                        <div class="total-row">
+                            <span>Total Items / Boxes:</span>
+                            <strong id="repeatOrderQuantityTotal">0</strong>
+                        </div>
+                        <div class="total-row grand-price-row">
+                            <span id="repeatOrderPriceLabel">Order Total:</span>
+                            <strong id="repeatOrderPriceTotal">₱0.00</strong>
+                        </div>
+                    </div>
+                    <div class="kiosk-tray-actions">
+                        <button type="button" id="kioskExportExcelBtn" class="btn-action-excel">📊 Export to Excel</button>
+                        <button type="submit" id="addRepeatOrderToBatchBtn" class="btn-action-submit" disabled>🚀 Create &amp; Activate New Batch</button>
+                    </div>
+                    <div id="repeatOrderItems" class="repeat-order-items" hidden aria-hidden="true"></div>
+                </section>
+            </aside>
+
+            <main class="kiosk-main-catalog">
+                <nav class="kiosk-catalog-tabs" id="kioskCatalogTabs" aria-label="Product categories">
+                    <button type="button" class="catalog-tab-btn active" data-cat="all">✨ All Products</button>
+                    <button type="button" class="catalog-tab-btn" data-cat="Angel Bars">🥭 Angel Bars</button>
+                    <button type="button" class="catalog-tab-btn" data-cat="Milk">🥛 Milk &amp; Spam</button>
+                    <button type="button" class="catalog-tab-btn" data-cat="Cakes &amp; Pastries">🍰 Cakes &amp; Pastries</button>
+                    <button type="button" class="catalog-tab-btn" data-cat="Cookies">🍪 Cookies</button>
+                </nav>
+                <div class="kiosk-catalog-grid" id="kioskCatalogGrid" aria-live="polite"></div>
+            </main>
+        </form>
+    </section>
+
+    <section id="archiveView" class="app-view hidden dashboard-subview">
+        <main class="workflow-container batch-history-panel">
+            <div class="workflow-heading">
+                <div>
+                    <h2>📁 Archives of Batches</h2>
+                    <p class="batch-history-description">Browse saved 15-day cycles, restore orders, or download historical Excel summaries.</p>
+                </div>
+                <button type="button" class="workflow-back-btn" data-home-back>← Home</button>
+            </div>
+            <div id="batchHistoryList" class="batch-history-list" aria-live="polite"></div>
+        </main>
+    </section>
+
+    <div id="kioskModalOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="kioskCustomerName">
+        <div class="modal-card kiosk-modal-card">
+            <div class="kiosk-header">
+                <div>
+                    <h2 id="kioskCustomerName">Edit Order</h2>
+                    <span class="kiosk-subtitle">Tap items below to add or adjust quantities</span>
+                </div>
+                <button type="button" class="close-modal-btn" id="closeKioskModalBtn" aria-label="Close product selector">&times;</button>
+            </div>
+            <nav class="kiosk-category-tabs" id="kioskCategoryTabs" aria-label="Product categories">
+                <button type="button" class="kiosk-tab-btn active" data-category="all">✨ All Products</button>
+                <button type="button" class="kiosk-tab-btn" data-category="Angel Bars">🥭 Angel Bars</button>
+                <button type="button" class="kiosk-tab-btn" data-category="Milk">🥛 Milk &amp; Spam</button>
+                <button type="button" class="kiosk-tab-btn" data-category="Cakes &amp; Pastries">🍰 Cakes &amp; Pastries</button>
+                <button type="button" class="kiosk-tab-btn" data-category="Cookies">🍪 Cookies</button>
+            </nav>
+            <div class="kiosk-products-grid" id="kioskProductsGrid" aria-live="polite"></div>
+            <div class="kiosk-footer">
+                <div class="kiosk-summary-info">
+                    <span>Total Items: <strong id="kioskTotalItemsCount">0</strong></span>
+                    <span class="kiosk-total-price">Total Amount: <strong id="kioskTotalPrice">₱0.00</strong></span>
+                </div>
+                <div class="kiosk-actions">
+                    <button type="button" id="cancelKioskBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="button" id="saveKioskOrderBtn" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Potential duplicate customer review -->
+    <div id="duplicateModal" class="modal-overlay duplicate-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="duplicateModalTitle">
+        <div class="modal-card duplicate-modal-card">
+            <p id="duplicateCounter" class="duplicate-counter"></p>
+            <h2 id="duplicateModalTitle">⚠️ Posibleng Duplicate Customer Detected</h2>
+            <p class="duplicate-description">Magkapareho ang area code at magkalapit ang mga pangalan. Pagsamahin ba ang mga order na ito?</p>
+            <div id="duplicateDetails" class="duplicate-details"></div>
+            <div class="duplicate-actions">
+                <button type="button" id="keepDuplicateSeparateBtn" class="btn btn-secondary">🚫 Keep Separate</button>
+                <button type="button" id="mergeDuplicateBtn" class="btn btn-primary">🔀 Merge Orders Into 1 Card</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="archiveBatchModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="archiveBatchModalTitle">
+        <form id="archiveBatchForm" class="modal-card archive-batch-modal">
+            <h2 id="archiveBatchModalTitle">📦 Archive Current Batch</h2>
+            <p class="archive-batch-description">Save a snapshot of all current customer orders and packing progress before starting the next cut-off.</p>
+            <label class="archive-batch-name-field" for="archiveBatchName">
+                Batch name
+                <input id="archiveBatchName" name="batchName" type="text" maxlength="80" placeholder="e.g. Nov 1-15 2026" required>
+            </label>
+            <div class="modal-actions">
+                <button type="button" id="cancelArchiveBatchBtn" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Archive & Start New Batch</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="archivePreviewModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="archiveModalTitle">
+        <div class="modal-card archive-modal-card">
+            <div class="modal-header">
+                <div>
+                    <h2 id="archiveModalTitle">Batch Preview</h2>
+                    <small id="archiveModalDate" class="text-muted"></small>
+                </div>
+                <button type="button" class="close-modal-btn" id="closeArchiveModalBtn" aria-label="Close batch preview">&times;</button>
+            </div>
+            <div id="archiveModalContent" class="modal-items-list archive-items-preview"></div>
+            <div class="modal-actions archive-modal-actions">
+                <button type="button" id="editArchiveBtn" class="btn btn-secondary">✏️ Edit Batch</button>
+                <button type="button" id="restoreArchiveBtn" class="btn btn-primary">🔄 Restore to Active List</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addCustomerModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="addCustomerTitle">
+        <div class="modal-card feature-modal-card">
+            <div class="modal-header">
+                <h2 id="addCustomerTitle">👤 Add New Customer</h2>
+                <button type="button" class="close-modal-btn" id="closeAddCustomerModal" aria-label="Close add customer">&times;</button>
+            </div>
+            <form id="addCustomerForm" class="feature-modal-form">
+                <label class="feature-form-group" for="newCustName">
+                    Customer Name
+                    <input type="text" id="newCustName" maxlength="100" placeholder="e.g. Kiko" required>
+                </label>
+                <label class="feature-form-group" for="newCustArea">
+                    Area / Branch
+                    <select id="newCustArea">
+                        <option value="SOR">SOR</option>
+                        <option value="AC">AC</option>
+                        <option value="CVT">CVT</option>
+                        <option value="ZM">ZM</option>
+                        <option value="OLO">OLO</option>
+                        <option value="BL">BL</option>
+                        <option value="CS">CS</option>
+                        <option value="NE">NE</option>
+                        <option value="AUR">AUR</option>
+                        <option value="PM">PM</option>
+                        <option value="OCCM">OCCM</option>
+                        <option value="UNASSIGNED">Unassigned</option>
+                    </select>
+                </label>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelAddCustomer">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save &amp; Add Items</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="addProductModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="addProductTitle">
+        <div class="modal-card feature-modal-card">
+            <div class="modal-header">
+                <h2 id="addProductTitle">➕ Add Custom Product</h2>
+                <button type="button" class="close-modal-btn" id="closeAddProductModal" aria-label="Close add product">&times;</button>
+            </div>
+            <form id="addProductForm" class="feature-modal-form">
+                <label class="feature-form-group" for="prodName">
+                    Product Description
+                    <input type="text" id="prodName" maxlength="120" placeholder="e.g. Ube Cookies 12s" required>
+                </label>
+                <div class="feature-form-row">
+                    <label class="feature-form-group" for="prodCategory">
+                        Category
+                        <select id="prodCategory" required>
+                            <option value="Angel Bars">Angel Bars</option>
+                            <option value="Milk &amp; Spam">Milk &amp; Spam</option>
+                            <option value="Cakes &amp; Pastries">Cakes &amp; Pastries</option>
+                            <option value="Cookies">Cookies</option>
+                        </select>
+                    </label>
+                    <label class="feature-form-group" for="prodUnit">
+                        Unit / Packaging
+                        <input type="text" id="prodUnit" list="productUnitOptions" placeholder="BOX / PCS / 12s" required>
+                        <datalist id="productUnitOptions">
+                            <option value="BOX"></option>
+                            <option value="BOXES"></option>
+                            <option value="PCS"></option>
+                            <option value="12s"></option>
+                            <option value="5 PCS"></option>
+                        </datalist>
+                    </label>
+                </div>
+                <div class="feature-form-row">
+                    <label class="feature-form-group" for="prodPrice">
+                        Unit Price (₱)
+                        <input type="number" id="prodPrice" min="0" step="0.01" placeholder="270.00" required>
+                    </label>
+                    <label class="feature-form-group" for="prodIcon">
+                        Emoji Icon
+                        <select id="prodIcon">
+                            <option value="🥭">🥭 Mango / Angel Bars</option>
+                            <option value="🥛">🥛 Milk</option>
+                            <option value="🥫">🥫 Spam</option>
+                            <option value="🍰">🍰 Cake</option>
+                            <option value="🍪">🍪 Cookie</option>
+                            <option value="🍞">🍞 Bread</option>
+                            <option value="✨">✨ Special Item</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelAddProduct">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product to Catalog</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="newBatchDecisionModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="newBatchDecisionTitle">
+        <div class="modal-card feature-modal-card new-batch-decision-card">
+            <div class="modal-header">
+                <h2 id="newBatchDecisionTitle">🚀 Start a New Repacking Cycle</h2>
+                <button type="button" class="close-modal-btn" id="closeNewBatchDecision" aria-label="Close batch decision">&times;</button>
+            </div>
+            <p class="archive-batch-description">Choose how to handle the current active checklist. Archiving preserves its orders and packing progress; saving a draft leaves the active checklist untouched.</p>
+            <label class="feature-form-group" for="newBatchDraftName">
+                New batch / draft name
+                <input type="text" id="newBatchDraftName" maxlength="80" required>
+            </label>
+            <label class="feature-form-group" for="currentBatchArchiveName">
+                Current active batch archive name
+                <input type="text" id="currentBatchArchiveName" maxlength="80" required>
+            </label>
+            <div class="new-batch-choice">
+                <button type="button" id="btnDecisionArchive" class="new-batch-choice-btn">
+                    <strong>📦 Archive Current Active Batch &amp; Start New</strong>
+                    <span>Save active orders and progress to Archives, then replace the live list with the new batch.</span>
+                </button>
+                <button type="button" id="btnDecisionDiscard" class="new-batch-choice-btn new-batch-discard-btn">
+                    <strong>🗑️ Discard Current Batch &amp; Start New</strong>
+                    <span>Permanently replace the current active list without saving it to Archives.</span>
+                </button>
+                <button type="button" id="saveNewBatchDraftBtn" class="new-batch-choice-btn new-batch-draft-btn">
+                    <strong>💾 Save as Archived Batch Draft</strong>
+                    <span>Add the new batch to Archives without changing the current active checklist.</span>
+                </button>
+            </div>
+            <button type="button" id="cancelNewBatchDecision" class="btn btn-secondary new-batch-cancel-btn">Cancel</button>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

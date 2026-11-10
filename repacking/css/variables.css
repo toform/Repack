@@ -1,0 +1,48 @@
+:root {
+    --primary-color: #b8860b;
+    --primary-hover: #8b6508;
+    --gold-light: #daa520;
+    --bg-color: #fdfcf7;
+    --card-bg: #fff;
+    --text-main: #2c221e;
+    --text-muted: #6e5f57;
+    --border-color: #e8dfd1;
+    --pending-color: #d97706;
+    --pending-bg: #fef3c7;
+    --incomplete-color: #c05656;
+    --incomplete-bg: #fdf2f2;
+    --completed-color: #15803d;
+    --completed-bg: #ebf5ed;
+    --shadow-gold: 0 4px 20px rgba(184, 134, 11, .08);
+    --font-display: "Cormorant Garamond", Georgia, serif;
+    --font-body: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-body);
+}
+
+body {
+    min-height: 100vh;
+    padding-bottom: 30px;
+    color: var(--text-main);
+    background: radial-gradient(ellipse at 50% -20%, rgba(218, 165, 32, .08), transparent 55%), var(--bg-color);
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+    }
+}
