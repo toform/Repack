@@ -294,7 +294,7 @@ function getActionButtons(index, status) {
 function getItemIcon(description) {
     if (/milk/i.test(description)) return '🥛';
     if (/spam|canned/i.test(description)) return '🥫';
-    if (/angel\s*bars?/i.test(description)) return '🍫';
+    if (/angel\s*bars?/i.test(description)) return /mango/i.test(description) ? '🥭' : '🍫';
     if (/cookie/i.test(description)) return '🍪';
     return '📦';
 }

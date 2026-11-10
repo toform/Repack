@@ -1,8 +1,8 @@
 import { appState } from './config.js';
 
 export const ALL_PRODUCTS = [
-    { id: 'ab_asstd_24', description: 'Angel Bars Assorted (24s)', unit: 'BOX', unitPrice: 525, category: 'Angel Bars', icon: '🥭' },
-    { id: 'ab_asstd_12', description: 'Angel Bars Assorted (12s)', unit: 'BOX', unitPrice: 270, category: 'Angel Bars', icon: '🥭' },
+    { id: 'ab_asstd_24', description: 'Angel Bars Assorted (24s)', unit: 'BOX', unitPrice: 525, category: 'Angel Bars', icon: '🍫' },
+    { id: 'ab_asstd_12', description: 'Angel Bars Assorted (12s)', unit: 'BOX', unitPrice: 270, category: 'Angel Bars', icon: '🍫' },
     { id: 'ab_mango_24', description: 'Mango Only Angel Bars (24s)', unit: 'BOX', unitPrice: 535, category: 'Angel Bars', icon: '🥭' },
     { id: 'ab_mango_12', description: 'Mango Only Angel Bars (12s)', unit: 'BOX', unitPrice: 275, category: 'Angel Bars', icon: '🥭' },
     { id: 'cake_cheesy_8', description: 'Cheesy Pastillas Cake Round 8"', unit: 'PCS', unitPrice: 650, category: 'Cakes & Pastries', icon: '🍰' },
